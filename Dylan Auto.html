@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoElite — Your Personal Car Advisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --deep: #111111;
+    --card: #161616;
+    --border: #2a2a2a;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6030;
+    --white: #f5f0e8;
+    --muted: #888888;
+    --accent: #c9a84c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.15s ease;
+    opacity: 0.6;
+  }
+  body:hover .cursor { opacity: 1; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 60px;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, transparent 100%);
+    transition: background 0.4s;
+  }
+  nav.scrolled { background: rgba(10,10,10,0.97); border-bottom: 1px solid var(--border); }
+
+  .logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .logo span { color: var(--white); }
+
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold); color: var(--black); }
+
+  /* HERO */
+  #hero {
+    height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 0 60px;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, #1a1200 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, #0d0d0d 0%, transparent 50%);
+  }
+
+  .hero-lines {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 45%;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 60px,
+      rgba(201,168,76,0.03) 60px,
+      rgba(201,168,76,0.03) 61px
+    );
+  }
+
+  .hero-car-silhouette {
+    position: absolute; right: -40px; bottom: 80px;
+    width: 700px; height: 300px;
+    opacity: 0.08;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 700 280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 200 Q100 200 120 180 L200 130 Q260 90 350 85 Q440 82 520 100 L620 120 Q660 130 680 160 L690 200 Q660 215 640 215 Q620 215 600 200 Q570 180 545 180 Q520 180 490 200 L220 200 Q200 185 175 185 Q150 185 130 200 Z' fill='%23c9a84c'/%3E%3Ccircle cx='175' cy='210' r='35' fill='%23c9a84c'/%3E%3Ccircle cx='545' cy='210' r='35' fill='%23c9a84c'/%3E%3C/svg%3E") no-repeat center/contain;
+    filter: blur(1px);
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(56px, 8vw, 110px);
+    line-height: 0.95;
+    font-weight: 300;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-title em { font-style: italic; color: var(--gold); }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex; gap: 20px; align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 16px 44px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    cursor: none;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--white);
+    border: none;
+    padding: 16px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: color 0.3s;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .btn-ghost::after {
+    content: '→';
+    transition: transform 0.3s;
+  }
+  .btn-ghost:hover { color: var(--gold); }
+  .btn-ghost:hover::after { transform: translateX(6px); }
+
+  /* STATS BAR */
+  .stats-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    opacity: 0;
+    animation: fadeUp 0.8s 1s forwards;
+  }
+  .stat-item {
+    padding: 28px 60px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 36px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION BASE */
+  section { padding: 120px 60px; }
+  .section-eyebrow {
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* BRANDS */
+  #brands { background: var(--deep); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+  .brands-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 70px; }
+
+  .brands-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+  }
+
+  .brand-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 40px 24px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+    cursor: none;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-card::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--gold);
+    transform: scaleX(0); transition: transform 0.4s;
+  }
+  .brand-card:hover { background: #1e1a10; transform: translateY(-4px); }
+  .brand-card:hover::before { transform: scaleX(1); }
+
+  .brand-logo-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .brand-card:hover .brand-logo-text { color: var(--gold); }
+
+  .brand-icon { font-size: 36px; line-height: 1; }
+
+  .brand-seg {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--border);
+    transition: color 0.3s;
+  }
+  .brand-card:hover .brand-seg { color: var(--gold-dim); }
+
+  /* QUIZ / ADVISOR */
+  #advisor { background: var(--black); }
+
+  .advisor-wrapper {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+  }
+
+  .advisor-left .section-desc {
+    color: var(--muted); line-height: 1.8; margin-bottom: 40px; max-width: 460px;
+  }
+
+  .quiz-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 48px;
+    position: relative;
+  }
+  .quiz-container::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  }
+
+  .quiz-progress {
+    display: flex; gap: 6px; margin-bottom: 36px;
+  }
+  .quiz-dot {
+    flex: 1; height: 2px; background: var(--border);
+    transition: background 0.4s;
+  }
+  .quiz-dot.active { background: var(--gold); }
+  .quiz-dot.done { background: var(--gold-dim); }
+
+  .quiz-step { display: none; }
+  .quiz-step.active { display: block; }
+
+  .quiz-q {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .quiz-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 14px 20px;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: none;
+    transition: all 0.3s;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .quiz-option:hover, .quiz-option.selected {
+    border-color: var(--gold); background: rgba(201,168,76,0.07); color: var(--gold);
+  }
+  .quiz-option-icon { font-size: 18px; }
+
+  .quiz-range-group { margin-bottom: 20px; }
+  .quiz-range-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--muted); margin-bottom: 10px;
+  }
+  .quiz-range {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 2px;
+    background: var(--border); outline: none; cursor: none;
+  }
+  .quiz-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--gold); border-radius: 50%;
+    cursor: none; transition: transform 0.2s;
+  }
+  .quiz-range::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  .quiz-range-val {
+    text-align: center; font-family: 'Bebas Neue', cursive;
+    font-size: 32px; color: var(--gold); letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .quiz-nav { display: flex; gap: 12px; margin-top: 32px; }
+  .quiz-btn {
+    flex: 1; padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: none; transition: all 0.3s;
+    font-weight: 500;
+  }
+  .quiz-btn-next { background: var(--gold); color: var(--black); border: none; }
+  .quiz-btn-next:hover { background: var(--gold-light); }
+  .quiz-btn-back { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .quiz-btn-back:hover { border-color: var(--white); color: var(--white); }
+
+  /* RESULT */
+  #result-section {
+    display: none;
+    background: var(--deep);
+    padding: 100px 60px;
+  }
+
+  .result-header { text-align: center; margin-bottom: 70px; }
+
+  .result-match {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--black);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 14px;
+    letter-spacing: 3px;
+    padding: 6px 20px;
+    margin-bottom: 20px;
+  }
+
+  .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s;
+  }
+  .result-card:hover { transform: translateY(-6px); }
+  .result-card.top-pick::before {
+    content: 'TOP PICK';
+    position: absolute; top: 16px; right: 16px;
+    background: var(--gold); color: var(--black);
+    font-size: 9px; letter-spacing: 2px;
+    padding: 4px 10px;
+    font-weight: 500;
+  }
+
+  .result-brand {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .result-model {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+  .result-desc { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+
+  .result-specs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .result-spec {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+  }
+  .result-spec-label { color: var(--muted); letter-spacing: 1px; }
+  .result-spec-val { color: var(--gold); font-weight: 500; }
+
+  .result-score {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+  }
+  .score-bar {
+    flex: 1; height: 3px; background: var(--border); border-radius: 2px;
+  }
+  .score-fill {
+    height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 2px; transition: width 1s ease;
+  }
+  .score-num { font-family: 'Bebas Neue', cursive; font-size: 20px; color: var(--gold); }
+
+  .result-cta {
+    width: 100%; padding: 14px;
+    background: transparent; border: 1px solid var(--gold);
+    color: var(--gold); font-family: 'DM Sans', sans-serif;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: none; transition: all 0.3s;
+  }
+  .result-cta:hover { background: var(--gold); color: var(--black); }
+
+  .result-restart {
+    text-align: center; margin-top: 50px;
+  }
+  .btn-restart {
+    background: transparent; border: none; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: none; transition: color 0.3s;
+  }
+  .btn-restart:hover { color: var(--gold); }
+
+  /* TESTIMONIALS */
+  #testimonials { background: var(--black); }
+
+  .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+
+  .testi-card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 40px; position: relative; overflow: hidden;
+    transition: border-color 0.4s;
+  }
+  .testi-card:hover { border-color: var(--gold-dim); }
+
+  .testi-quote-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 80px; line-height: 0.8;
+    color: var(--gold); opacity: 0.3;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .testi-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-style: italic;
+    line-height: 1.6; color: var(--white);
+    margin-bottom: 32px;
+  }
+  .testi-author { display: flex; align-items: center; gap: 16px; }
+  .testi-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 18px; color: var(--gold);
+    flex-shrink: 0;
+  }
+  .testi-name {
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .testi-car { font-size: 11px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+
+  .testi-stars { color: var(--gold); font-size: 12px; margin-bottom: 24px; letter-spacing: 2px; }
+
+  /* CONTACT */
+  #contact { background: var(--deep); border-top: 1px solid var(--border); }
+
+  .contact-wrapper {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 100px; align-items: start;
+  }
+
+  .contact-info { }
+  .contact-desc { color: var(--muted); line-height: 1.8; margin-bottom: 48px; }
+
+  .contact-items { display: flex; flex-direction: column; gap: 28px; }
+  .contact-item { display: flex; align-items: flex-start; gap: 20px; }
+  .contact-item-icon {
+    width: 44px; height: 44px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; color: var(--gold);
+    transition: all 0.3s;
+  }
+  .contact-item:hover .contact-item-icon { background: var(--gold); color: var(--black); }
+  .contact-item-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .contact-item-val { font-size: 15px; color: var(--white); }
+
+  .contact-form { }
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block; font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: var(--card);
+    border: 1px solid var(--border); color: var(--white);
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.3s;
+    cursor: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+  }
+  .form-select {
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 18px center;
+    background-color: var(--card);
+  }
+  .form-select option { background: var(--deep); }
+  .form-textarea { resize: vertical; min-height: 120px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .form-submit {
+    width: 100%; padding: 16px;
+    background: var(--gold); border: none;
+    color: var(--black);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    font-weight: 500; cursor: none; transition: all 0.3s;
+    margin-top: 8px;
+  }
+  .form-submit:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+  .form-success {
+    display: none;
+    text-align: center; padding: 48px;
+    background: rgba(201,168,76,0.05); border: 1px solid var(--gold-dim);
+  }
+  .form-success-icon { font-size: 48px; margin-bottom: 20px; }
+  .form-success-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; margin-bottom: 12px;
+  }
+  .form-success-sub { color: var(--muted); font-size: 14px; }
+
+  /* FOOTER */
+  footer {
+    background: #080808;
+    border-top: 1px solid var(--border);
+    padding: 60px;
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+  }
+
+  .footer-brand .logo { display: block; margin-bottom: 16px; }
+  .footer-brand p { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 280px; }
+
+  .footer-col h4 {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 24px;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .footer-col ul a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    transition: color 0.3s;
+  }
+  .footer-col ul a:hover { color: var(--white); }
+
+  .footer-bottom {
+    background: #080808;
+    border-top: 1px solid var(--border);
+    padding: 24px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-bottom p { font-size: 12px; color: var(--border); }
+
+  /* DIVIDER */
+  .gold-line {
+    width: 60px; height: 2px; background: var(--gold); margin-bottom: 32px;
+  }
+
+  /* SCROLL REVEAL */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s, transform 0.7s; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    #hero { padding: 0 24px; }
+    section { padding: 80px 24px; }
+    .brands-grid { grid-template-columns: repeat(3, 1fr); }
+    .advisor-wrapper { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    .testi-grid { grid-template-columns: 1fr; }
+    .contact-wrapper { grid-template-columns: 1fr; gap: 48px; }
+    footer { grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px 24px; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .stat-item { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSORS -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#hero" class="logo">Auto<span>Elite</span></a>
+  <ul class="nav-links">
+    <li><a href="#brands">Brands</a></li>
+    <li><a href="#advisor">Advisor</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('advisor').scrollIntoView({behavior:'smooth'})">Find My Car</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-car-silhouette"></div>
+
+  <p class="hero-eyebrow">Premium Car Advisory</p>
+  <h1 class="hero-title">Drive the <em>Right</em><br>Car for You</h1>
+  <p class="hero-sub">Answer a few questions and our AI-powered advisor will match you with the perfect vehicle — from luxury SUVs to sports coupes, tailored to your lifestyle and budget.</p>
+
+  <div class="hero-actions">
+    <a href="#advisor" class="btn-primary">Start the Quiz</a>
+    <a href="#brands" class="btn-ghost">Explore Brands</a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">50+</div>
+      <div class="stat-label">Premium Brands</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">12K</div>
+      <div class="stat-label">Cars Matched</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">98%</div>
+      <div class="stat-label">Satisfaction Rate</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24/7</div>
+      <div class="stat-label">Expert Support</div>
+    </div>
+  </div>
+</section>
+
+<!-- BRANDS -->
+<section id="brands">
+  <div class="brands-header reveal">
+    <div>
+      <p class="section-eyebrow">Premium Partners</p>
+      <h2 class="section-title">The World's Finest <em>Marques</em></h2>
+    </div>
+    <p style="max-width:320px; color:var(--muted); font-size:14px; line-height:1.7;">We advise across every tier — from attainable luxury to the ultra-exclusive.</p>
+  </div>
+
+  <div class="brands-grid reveal">
+    <div class="brand-card"><div class="brand-icon">⚡</div><div class="brand-logo-text">BMW</div><div class="brand-seg">Sport Luxury</div></div>
+    <div class="brand-card"><div class="brand-icon">⭐</div><div class="brand-logo-text">MERCEDES</div><div class="brand-seg">Ultra Luxury</div></div>
+    <div class="brand-card"><div class="brand-icon">🐎</div><div class="brand-logo-text">PORSCHE</div><div class="brand-seg">Performance</div></div>
+    <div class="brand-card"><div class="brand-icon">🦁</div><div class="brand-logo-text">FERRARI</div><div class="brand-seg">Supercar</div></div>
+    <div class="brand-card"><div class="brand-icon">🦋</div><div class="brand-logo-text">ROLLS ROYCE</div><div class="brand-seg">Ultra Prestige</div></div>
+    <div class="brand-card"><div class="brand-icon">💎</div><div class="brand-logo-text">BENTLEY</div><div class="brand-seg">Grand Touring</div></div>
+    <div class="brand-card"><div class="brand-icon">🏎</div><div class="brand-logo-text">LAMBORGHINI</div><div class="brand-seg">Supercar</div></div>
+    <div class="brand-card"><div class="brand-icon">🌊</div><div class="brand-logo-text">ASTON MARTIN</div><div class="brand-seg">British GT</div></div>
+    <div class="brand-card"><div class="brand-icon">🔱</div><div class="brand-logo-text">MASERATI</div><div class="brand-seg">Italian Luxury</div></div>
+    <div class="brand-card"><div class="brand-icon">🏔</div><div class="brand-logo-text">LAND ROVER</div><div class="brand-seg">Luxury SUV</div></div>
+    <div class="brand-card"><div class="brand-icon">🎯</div><div class="brand-logo-text">AUDI</div><div class="brand-seg">Tech Luxury</div></div>
+    <div class="brand-card"><div class="brand-icon">🌿</div><div class="brand-logo-text">TESLA</div><div class="brand-seg">Electric</div></div>
+  </div>
+</section>
+
+<!-- ADVISOR QUIZ -->
+<section id="advisor">
+  <div class="advisor-wrapper">
+    <div class="advisor-left reveal">
+      <p class="section-eyebrow">AI Car Advisor</p>
+      <h2 class="section-title">Your Perfect <em>Match</em> Awaits</h2>
+      <div class="gold-line"></div>
+      <p class="section-desc">Our intelligent advisor analyses your lifestyle, preferences, and budget to recommend vehicles with uncanny precision. No bias. No commissions. Just the right car for you.</p>
+      <p class="section-desc" style="margin-top:-16px;">Tell us about yourself and we'll identify your ideal match from 300+ models across every luxury tier.</p>
+    </div>
+
+    <div class="reveal">
+      <div class="quiz-container" id="quizContainer">
+        <div class="quiz-progress" id="quizProgress"></div>
+
+        <!-- Step 1: Budget -->
+        <div class="quiz-step active" data-step="1">
+          <p class="quiz-q">What's your budget?</p>
+          <p class="quiz-sub">Move the slider to set your maximum spend</p>
+          <div class="quiz-range-val" id="budgetDisplay">$60,000</div>
+          <div class="quiz-range-group">
+            <input type="range" class="quiz-range" id="budgetRange" min="20000" max="500000" step="5000" value="60000">
+            <div class="quiz-range-label"><span>$20K</span><span>$500K+</span></div>
+          </div>
+        </div>
+
+        <!-- Step 2: Lifestyle -->
+        <div class="quiz-step" data-step="2">
+          <p class="quiz-q">What best describes your lifestyle?</p>
+          <p class="quiz-sub">This helps us understand your daily needs</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-val="executive" onclick="selectOption(this)"><span class="quiz-option-icon">💼</span> Executive & Business</button>
+            <button class="quiz-option" data-val="family" onclick="selectOption(this)"><span class="quiz-option-icon">👨‍👩‍👧</span> Family & Practical</button>
+            <button class="quiz-option" data-val="performance" onclick="selectOption(this)"><span class="quiz-option-icon">🏁</span> Performance & Thrill</button>
+            <button class="quiz-option" data-val="adventure" onclick="selectOption(this)"><span class="quiz-option-icon">⛰️</span> Adventure & Off-Road</button>
+            <button class="quiz-option" data-val="prestige" onclick="selectOption(this)"><span class="quiz-option-icon">👑</span> Status & Prestige</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Body Type -->
+        <div class="quiz-step" data-step="3">
+          <p class="quiz-q">Preferred body style?</p>
+          <p class="quiz-sub">Or let us choose for you</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-val="sedan" onclick="selectOption(this)"><span class="quiz-option-icon">🚗</span> Sedan / Saloon</button>
+            <button class="quiz-option" data-val="suv" onclick="selectOption(this)"><span class="quiz-option-icon">🚙</span> SUV / Crossover</button>
+            <button class="quiz-option" data-val="coupe" onclick="selectOption(this)"><span class="quiz-option-icon">🏎</span> Coupé / Convertible</button>
+            <button class="quiz-option" data-val="wagon" onclick="selectOption(this)"><span class="quiz-option-icon">🚐</span> Estate / Wagon</button>
+            <button class="quiz-option" data-val="any" onclick="selectOption(this)"><span class="quiz-option-icon">🎲</span> Surprise Me</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Priority -->
+        <div class="quiz-step" data-step="4">
+          <p class="quiz-q">What matters most to you?</p>
+          <p class="quiz-sub">Your top priority shapes our recommendation</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-val="comfort" onclick="selectOption(this)"><span class="quiz-option-icon">🛋️</span> Comfort & Refinement</button>
+            <button class="quiz-option" data-val="tech" onclick="selectOption(this)"><span class="quiz-option-icon">🖥️</span> Technology & Innovation</button>
+            <button class="quiz-option" data-val="power" onclick="selectOption(this)"><span class="quiz-option-icon">⚡</span> Power & Performance</button>
+            <button class="quiz-option" data-val="economy" onclick="selectOption(this)"><span class="quiz-option-icon">🌱</span> Efficiency & Economy</button>
+            <button class="quiz-option" data-val="design" onclick="selectOption(this)"><span class="quiz-option-icon">✨</span> Design & Exclusivity</button>
+          </div>
+        </div>
+
+        <!-- Step 5: Daily Use -->
+        <div class="quiz-step" data-step="5">
+          <p class="quiz-q">How far do you drive daily?</p>
+          <p class="quiz-sub">Average daily mileage</p>
+          <div class="quiz-range-val" id="mileageDisplay">50 miles/day</div>
+          <div class="quiz-range-group">
+            <input type="range" class="quiz-range" id="mileageRange" min="5" max="300" step="5" value="50">
+            <div class="quiz-range-label"><span>5 miles</span><span>300 miles</span></div>
+          </div>
+        </div>
+
+        <!-- Step 6: Passengers -->
+        <div class="quiz-step" data-step="6">
+          <p class="quiz-q">How many seats do you need?</p>
+          <p class="quiz-sub">Counting yourself and frequent passengers</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-val="2" onclick="selectOption(this)"><span class="quiz-option-icon">👤</span> 2 Seats — Just me (and a guest)</button>
+            <button class="quiz-option" data-val="4" onclick="selectOption(this)"><span class="quiz-option-icon">👥</span> 4–5 Seats — Compact family</button>
+            <button class="quiz-option" data-val="7" onclick="selectOption(this)"><span class="quiz-option-icon">👨‍👩‍👧‍👦</span> 7+ Seats — Large family / group</button>
+          </div>
+        </div>
+
+        <!-- Step 7: Fuel -->
+        <div class="quiz-step" data-step="7">
+          <p class="quiz-q">Fuel preference?</p>
+          <p class="quiz-sub">Power source that fits your world</p>
+          <div class="quiz-options">
+            <button class="quiz-option" data-val="petrol" onclick="selectOption(this)"><span class="quiz-option-icon">⛽</span> Petrol / Gasoline</button>
+            <button class="quiz-option" data-val="diesel" onclick="selectOption(this)"><span class="quiz-option-icon">🛢</span> Diesel</button>
+            <button class="quiz-option" data-val="hybrid" onclick="selectOption(this)"><span class="quiz-option-icon">🔋</span> Hybrid</button>
+            <button class="quiz-option" data-val="electric" onclick="selectOption(this)"><span class="quiz-option-icon">⚡</span> Full Electric</button>
+            <button class="quiz-option" data-val="nopreference" onclick="selectOption(this)"><span class="quiz-option-icon">🤷</span> No Preference</button>
+          </div>
+        </div>
+
+        <div class="quiz-nav">
+          <button class="quiz-btn quiz-btn-back" id="backBtn" onclick="quizBack()" style="display:none">← Back</button>
+          <button class="quiz-btn quiz-btn-next" id="nextBtn" onclick="quizNext()">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<div id="result-section">
+  <div class="result-header reveal">
+    <div class="result-match">Your Matches</div>
+    <h2 class="section-title">We Found Your <em>Perfect Cars</em></h2>
+    <p style="color:var(--muted); max-width:500px; margin:0 auto; font-size:14px; line-height:1.8;" id="resultSummary"></p>
+  </div>
+  <div class="result-grid" id="resultGrid"></div>
+  <div class="result-restart">
+    <button class="btn-restart" onclick="restartQuiz()">↺ Retake the Quiz</button>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div style="text-align:center; margin-bottom:16px;" class="reveal">
+    <p class="section-eyebrow">Client Stories</p>
+    <h2 class="section-title">What Our Clients <em>Say</em></h2>
+  </div>
+
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">AutoElite recommended the BMW X5 M and I couldn't be more satisfied. It nailed my blend of daily commuting and weekend spirited driving. Absolutely uncanny accuracy.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">JH</div>
+        <div>
+          <div class="testi-name">James Hartwell</div>
+          <div class="testi-car">BMW X5 M Competition</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">I was torn between a Porsche and a Mercedes. The advisor laid it out perfectly — and the Panamera Turbo S they suggested exceeded every expectation.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">SC</div>
+        <div>
+          <div class="testi-name">Sophia Chen</div>
+          <div class="testi-car">Porsche Panamera Turbo S</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">The Rolls-Royce Cullinan recommendation was spot on. AutoElite understood that I needed presence, space, and absolute refinement. Delivered on all fronts.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">AR</div>
+        <div>
+          <div class="testi-name">Ahmed Al-Rashid</div>
+          <div class="testi-car">Rolls-Royce Cullinan</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">As a mother of three, I needed practicality without sacrificing style. The Mercedes GLS 450 suggestion was perfect — both the kids and my ego are happy.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">LM</div>
+        <div>
+          <div class="testi-name">Laura Martinez</div>
+          <div class="testi-car">Mercedes-Benz GLS 450</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">I didn't expect an online tool to understand my needs so deeply. The Tesla Model S Plaid recommendation blew my mind — both the advice and the car itself.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">DK</div>
+        <div>
+          <div class="testi-name">Daniel Kim</div>
+          <div class="testi-car">Tesla Model S Plaid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote-mark">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">Ferrari or Lamborghini? I'd always debated it. AutoElite settled it definitively with the SF90 Stradale — the right choice for road and occasional track days.</p>
+      <div class="testi-author">
+        <div class="testi-avatar">MV</div>
+        <div>
+          <div class="testi-name">Marco Valentini</div>
+          <div class="testi-car">Ferrari SF90 Stradale</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-wrapper">
+    <div class="contact-info reveal">
+      <p class="section-eyebrow">Get In Touch</p>
+      <h2 class="section-title">Speak With an <em>Expert</em></h2>
+      <div class="gold-line"></div>
+      <p class="contact-desc">Our team of automotive specialists are available to provide bespoke consultation beyond our digital advisor — whether you need to compare specific models, explore financing, or arrange test drives.</p>
+
+      <div class="contact-items">
+        <div class="contact-item">
+          <div class="contact-item-icon">📞</div>
+          <div>
+            <div class="contact-item-label">Phone</div>
+            <div class="contact-item-val">+1 (800) AUTO-ELITE</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">✉️</div>
+          <div>
+            <div class="contact-item-label">Email</div>
+            <div class="contact-item-val">advisor@autoelite.com</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">📍</div>
+          <div>
+            <div class="contact-item-label">Showroom</div>
+            <div class="contact-item-val">42 Mayfair Boulevard, London W1K</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">🕐</div>
+          <div>
+            <div class="contact-item-label">Hours</div>
+            <div class="contact-item-val">Mon–Sat, 9AM – 7PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-form reveal">
+      <form id="contactForm" onsubmit="submitForm(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input class="form-input" type="text" placeholder="James" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" type="text" placeholder="Hartwell" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" placeholder="james@example.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-input" type="tel" placeholder="+1 (555) 000-0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">I'm Interested In</label>
+          <select class="form-select form-input">
+            <option value="">Select an option...</option>
+            <option>Luxury Sedans</option>
+            <option>Performance Cars</option>
+            <option>Luxury SUVs</option>
+            <option>Supercars</option>
+            <option>Electric Vehicles</option>
+            <option>General Consultation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea class="form-textarea form-input" placeholder="Tell us about your dream car, timeline, and any specific requirements..."></textarea>
+        </div>
+        <button type="submit" class="form-submit">Send Message →</button>
+      </form>
+      <div class="form-success" id="formSuccess">
+        <div class="form-success-icon">✅</div>
+        <h3 class="form-success-title">Message Received</h3>
+        <p class="form-success-sub">One of our specialists will contact you within 24 hours. We look forward to finding your perfect car.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <a href="#hero" class="logo">Auto<span>Elite</span></a>
+    <p>The world's most sophisticated AI-powered car advisory platform. Connecting discerning buyers with their perfect vehicle since 2019.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <ul>
+      <li><a href="#advisor">Car Advisor</a></li>
+      <li><a href="#brands">All Brands</a></li>
+      <li><a href="#testimonials">Reviews</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Brands</h4>
+    <ul>
+      <li><a href="#">BMW</a></li>
+      <li><a href="#">Mercedes-Benz</a></li>
+      <li><a href="#">Porsche</a></li>
+      <li><a href="#">Ferrari</a></li>
+      <li><a href="#">Rolls-Royce</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Services</h4>
+    <ul>
+      <li><a href="#">Test Drive Booking</a></li>
+      <li><a href="#">Finance Advisory</a></li>
+      <li><a href="#">Bespoke Consultation</a></li>
+      <li><a href="#">Fleet Services</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>© 2025 AutoElite. All rights reserved.</p>
+  <p>Privacy Policy · Terms of Service · Cookie Policy</p>
+</div>
+
+<script>
+  // CURSOR
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+    setTimeout(() => {
+      ring.style.left = e.clientX + 'px';
+      ring.style.top  = e.clientY + 'px';
+    }, 60);
+  });
+  document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px'; cursor.style.height = '20px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px'; cursor.style.height = '12px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  // NAV SCROLL
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // SCROLL REVEAL
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // QUIZ STATE
+  const TOTAL_STEPS = 7;
+  let currentStep = 1;
+  const answers = {};
+
+  // Progress dots
+  function renderProgress() {
+    const prog = document.getElementById('quizProgress');
+    prog.innerHTML = '';
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const d = document.createElement('div');
+      d.className = 'quiz-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+      prog.appendChild(d);
+    }
+  }
+  renderProgress();
+
+  // Budget slider
+  const budgetRange = document.getElementById('budgetRange');
+  budgetRange.addEventListener('input', () => {
+    const v = parseInt(budgetRange.value);
+    document.getElementById('budgetDisplay').textContent = v >= 500000 ? '$500,000+' : '$' + v.toLocaleString();
+    answers.budget = v;
+  });
+  answers.budget = 60000;
+
+  // Mileage slider
+  const mileageRange = document.getElementById('mileageRange');
+  mileageRange.addEventListener('input', () => {
+    document.getElementById('mileageDisplay').textContent = mileageRange.value + ' miles/day';
+    answers.mileage = parseInt(mileageRange.value);
+  });
+  answers.mileage = 50;
+
+  function selectOption(btn) {
+    const parent = btn.closest('.quiz-options');
+    parent.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const key = ['','budget','lifestyle','bodyType','priority','mileage','seats','fuel'][currentStep];
+    answers[key] = btn.dataset.val;
+  }
+
+  function quizNext() {
+    if (currentStep === 1) answers.budget = parseInt(budgetRange.value);
+    if (currentStep === 5) answers.mileage = parseInt(mileageRange.value);
+
+    if ([2,3,4,6,7].includes(currentStep)) {
+      const key = ['','budget','lifestyle','bodyType','priority','mileage','seats','fuel'][currentStep];
+      if (!answers[key]) {
+        const first = document.querySelector('.quiz-step.active .quiz-option');
+        if (first) { first.classList.add('selected'); answers[key] = first.dataset.val; }
+      }
+    }
+
+    if (currentStep < TOTAL_STEPS) {
+      document.querySelector(`.quiz-step[data-step="${currentStep}"]`).classList.remove('active');
+      currentStep++;
+      document.querySelector(`.quiz-step[data-step="${currentStep}"]`).classList.add('active');
+      document.getElementById('backBtn').style.display = currentStep > 1 ? 'block' : 'none';
+      if (currentStep === TOTAL_STEPS) document.getElementById('nextBtn').textContent = 'See My Matches ✨';
+      renderProgress();
+    } else {
+      showResults();
+    }
+  }
+
+  function quizBack() {
+    if (currentStep > 1) {
+      document.querySelector(`.quiz-step[data-step="${currentStep}"]`).classList.remove('active');
+      currentStep--;
+      document.querySelector(`.quiz-step[data-step="${currentStep}"]`).classList.add('active');
+      document.getElementById('backBtn').style.display = currentStep > 1 ? 'block' : 'none';
+      document.getElementById('nextBtn').textContent = 'Continue →';
+      renderProgress();
+    }
+  }
+
+  // CAR DATABASE
+  const carDB = [
+    { brand:'BMW', model:'M3 Competition', price:80000, type:'sedan', lifestyle:['executive','performance'], priority:['power','design'], fuel:['petrol'], seats:[2,4], mileage:'any', score:0, desc:'The benchmark sports saloon. Razor-sharp dynamics wrapped in BMW\'s understated prestige, with a thunderous inline-six.', hp:'503hp', accel:'3.9s 0–60', mpg:'18 city', seg:'Sport Sedan' },
+    { brand:'BMW', model:'X5 M Competition', price:115000, type:'suv', lifestyle:['executive','performance','family'], priority:['power','comfort'], fuel:['petrol'], seats:[4,7], mileage:'any', score:0, desc:'Effortlessly combining family practicality with supercar-rivaling performance. The definitive high-performance luxury SUV.', hp:'617hp', accel:'3.7s 0–60', mpg:'14 city', seg:'Performance SUV' },
+    { brand:'Mercedes-Benz', model:'S-Class S580', price:115000, type:'sedan', lifestyle:['executive','prestige'], priority:['comfort','tech'], fuel:['petrol','hybrid'], seats:[4], mileage:'any', score:0, desc:'The pinnacle of automotive luxury. The S-Class defines the segment — effortless refinement, cutting-edge technology, and supreme comfort.', hp:'496hp', accel:'4.4s 0–60', mpg:'19 city', seg:'Ultra Luxury Sedan' },
+    { brand:'Mercedes-Benz', model:'AMG GT 63 S', price:162000, type:'coupe', lifestyle:['performance','prestige'], priority:['power','design'], fuel:['petrol'], seats:[2,4], mileage:'any', score:0, desc:'Where AMG\'s motorsport DNA meets four-door versatility. Electrifying performance with the usability of a grand tourer.', hp:'630hp', accel:'3.1s 0–60', mpg:'15 city', seg:'Performance GT' },
+    { brand:'Mercedes-Benz', model:'GLS 450', price:99000, type:'suv', lifestyle:['family','prestige'], priority:['comfort','tech'], fuel:['petrol','hybrid'], seats:[7], mileage:'any', score:0, desc:'The S-Class of SUVs. Seven seats wrapped in extraordinary luxury, with Mercedes\' finest comfort technologies.', hp:'362hp', accel:'5.5s 0–60', mpg:'18 city', seg:'Luxury Full-Size SUV' },
+    { brand:'Porsche', model:'911 Carrera 4S', price:135000, type:'coupe', lifestyle:['performance'], priority:['power','design'], fuel:['petrol'], seats:[2,4], mileage:'any', score:0, desc:'Sixty years of perfection. The 911 remains the world\'s most complete sports car — civilised enough for daily use, thrilling on any road.', hp:'443hp', accel:'3.6s 0–60', mpg:'17 city', seg:'Iconic Sports Car' },
+    { brand:'Porsche', model:'Cayenne Turbo GT', price:185000, type:'suv', lifestyle:['performance','family'], priority:['power','design'], fuel:['petrol'], seats:[4,7], mileage:'any', score:0, desc:'The SUV that shames sports cars. The Cayenne Turbo GT set lap records at the Nürburgring — with luggage space.', hp:'631hp', accel:'3.1s 0–60', mpg:'14 city', seg:'Performance SUV' },
+    { brand:'Porsche', model:'Panamera Turbo S', price:195000, type:'sedan', lifestyle:['executive','performance','prestige'], priority:['power','comfort'], fuel:['petrol','hybrid'], seats:[4], mileage:'any', score:0, desc:'The four-door 911. Astonishing performance, genuine luxury, and Porsche\'s unmistakeable driver focus in an executive body.', hp:'620hp', accel:'3.2s 0–60', mpg:'17 city', seg:'Sport Executive' },
+    { brand:'Ferrari', model:'Roma', price:225000, type:'coupe', lifestyle:['prestige','performance'], priority:['design','power'], fuel:['petrol'], seats:[2], mileage:'any', score:0, desc:'La Dolce Vita on four wheels. The Roma is Ferrari\'s most beautiful car in decades — a grand tourer of timeless elegance and searing performance.', hp:'612hp', accel:'3.4s 0–60', mpg:'15 city', seg:'Italian Grand Tourer' },
+    { brand:'Ferrari', model:'SF90 Stradale', price:500000, type:'coupe', lifestyle:['performance','prestige'], priority:['power','design'], fuel:['hybrid'], seats:[2], mileage:'any', score:0, desc:'Ferrari\'s most powerful road car. 986 hybrid horsepower in a form that is simultaneously road-legal and track-dominant. Utterly extraordinary.', hp:'986hp', accel:'2.5s 0–60', mpg:'16 city', seg:'Hypercar' },
+    { brand:'Rolls-Royce', model:'Ghost', price:340000, type:'sedan', lifestyle:['prestige'], priority:['comfort','design'], fuel:['petrol'], seats:[4], mileage:'any', score:0, desc:'Described by Rolls-Royce as "post opulence" — a masterpiece of effortless luxury where the silence, craftsmanship and presence are unmatched.', hp:'563hp', accel:'4.6s 0–60', mpg:'15 city', seg:'Ultra Prestige Sedan' },
+    { brand:'Rolls-Royce', model:'Cullinan', price:370000, type:'suv', lifestyle:['prestige','family'], priority:['comfort','design'], fuel:['petrol'], seats:[4,7], mileage:'any', score:0, desc:'The world\'s most luxurious SUV. The Cullinan takes the Rolls-Royce experience off-road without compromising a single thread of Goodwood refinement.', hp:'563hp', accel:'5.0s 0–60', mpg:'12 city', seg:'Ultra Prestige SUV' },
+    { brand:'Bentley', model:'Continental GT Speed', price:260000, type:'coupe', lifestyle:['prestige','performance'], priority:['design','comfort'], fuel:['petrol'], seats:[2,4], mileage:'any', score:0, desc:'The definitive grand tourer. The Continental GT Speed blends Bentley\'s legendary craftsmanship with W12-powered continent-devouring performance.', hp:'650hp', accel:'3.5s 0–60', mpg:'14 city', seg:'British Grand Tourer' },
+    { brand:'Bentley', model:'Bentayga EWB', price:250000, type:'suv', lifestyle:['prestige','family'], priority:['comfort','design'], fuel:['petrol','hybrid'], seats:[4,7], mileage:'any', score:0, desc:'The extended wheelbase Bentayga transforms rear passenger space into a travelling suite. Unmatched bespoke luxury in SUV form.', hp:'542hp', accel:'4.0s 0–60', mpg:'15 city', seg:'Luxury SUV' },
+    { brand:'Lamborghini', model:'Urus Performante', price:260000, type:'suv', lifestyle:['performance','prestige'], priority:['power','design'], fuel:['petrol'], seats:[4], mileage:'any', score:0, desc:'The raging bull as a family SUV. With 657hp and a 193mph top speed, the Urus Performante makes every school run a supercar event.', hp:'657hp', accel:'3.3s 0–60', mpg:'13 city', seg:'Super SUV' },
+    { brand:'Aston Martin', model:'DB12', price:245000, type:'coupe', lifestyle:['prestige','performance'], priority:['design','power'], fuel:['petrol'], seats:[2,4], mileage:'any', score:0, desc:'The world\'s first super tourer. The DB12 is a quantum leap for Aston — more powerful, more beautiful, and more sophisticated than any before it.', hp:'671hp', accel:'3.5s 0–60', mpg:'16 city', seg:'British Sports GT' },
+    { brand:'Tesla', model:'Model S Plaid', price:90000, type:'sedan', lifestyle:['executive','performance'], priority:['tech','power'], fuel:['electric'], seats:[4], mileage:'any', score:0, desc:'The quickest production car ever made. Tesla\'s technological tour de force combines ludicrous acceleration with a 400-mile range and over-the-air updates.', hp:'1020hp', accel:'1.99s 0–60', mpg:'EPA 102MPGe', seg:'Electric Performance Sedan' },
+    { brand:'Tesla', model:'Model X Plaid', price:110000, type:'suv', lifestyle:['family','performance'], priority:['tech','power'], fuel:['electric'], seats:[7], mileage:'any', score:0, desc:'Seven seats, falcon-wing doors, and sub-3-second 0–60. The Model X Plaid is the future of family transport — quiet, quick, and cavernous.', hp:'1020hp', accel:'2.5s 0–60', mpg:'EPA 92MPGe', seg:'Electric Luxury SUV' },
+    { brand:'Audi', model:'RS e-tron GT', price:145000, type:'sedan', lifestyle:['executive','performance'], priority:['tech','design'], fuel:['electric'], seats:[4], mileage:'any', score:0, desc:'Audi\'s electric grand tourer is a symphony of low-slung design and quattro-driven performance. The most beautiful electric car on sale today.', hp:'637hp', accel:'3.1s 0–60', mpg:'EPA 79MPGe', seg:'Electric Sports Sedan' },
+    { brand:'Land Rover', model:'Range Rover SV', price:180000, type:'suv', lifestyle:['prestige','adventure','family'], priority:['comfort','design'], fuel:['petrol','hybrid','diesel'], seats:[4,7], mileage:'any', score:0, desc:'The original luxury SUV, now at its absolute zenith. The Range Rover SV combines off-road supremacy with interior opulence rivalling Rolls-Royce.', hp:'530hp', accel:'4.4s 0–60', mpg:'18 city', seg:'British Luxury SUV' },
+    { brand:'Maserati', model:'Grecale Trofeo', price:95000, type:'suv', lifestyle:['executive','performance'], priority:['design','power'], fuel:['petrol'], seats:[4], mileage:'any', score:0, desc:'Italian flair meets SUV practicality. The Grecale Trofeo delivers Ferrari-sourced V6 power with Maserati\'s distinctively romantic aesthetic.', hp:'523hp', accel:'3.8s 0–60', mpg:'17 city', seg:'Italian Performance SUV' },
+    { brand:'BMW', model:'iX M60', price:109000, type:'suv', lifestyle:['executive','family'], priority:['tech','power'], fuel:['electric'], seats:[4,7], mileage:'any', score:0, desc:'BMW\'s electric flagship SUV fuses a 610hp dual-motor powertrain with a spectacularly futuristic interior and 300-mile range.', hp:'610hp', accel:'3.6s 0–60', mpg:'EPA 67MPGe', seg:'Electric Luxury SUV' },
+    { brand:'Mercedes-Benz', model:'EQS 580', price:125000, type:'sedan', lifestyle:['executive'], priority:['tech','comfort'], fuel:['electric'], seats:[4], mileage:'any', score:0, desc:'The S-Class goes electric. The EQS offers the world\'s largest in-car screen, a 350-mile range, and the quietest cabin ever measured.', hp:'516hp', accel:'4.1s 0–60', mpg:'EPA 85MPGe', seg:'Electric Luxury Sedan' },
+  ];
+
+  function scoreAndSort(userAnswers) {
+    const budget = userAnswers.budget || 60000;
+    const lifestyle = userAnswers.lifestyle || 'executive';
+    const bodyType = userAnswers.bodyType || 'any';
+    const priority = userAnswers.priority || 'comfort';
+    const seats = parseInt(userAnswers.seats) || 4;
+    const fuel = userAnswers.fuel || 'nopreference';
+    const mileage = userAnswers.mileage || 50;
+
+    const results = carDB.map(car => {
+      let score = 0;
+      // Budget (max 30 pts)
+      if (car.price <= budget) score += 30;
+      else if (car.price <= budget * 1.2) score += 15;
+      else if (car.price <= budget * 1.5) score += 5;
+      // Lifestyle (max 20 pts)
+      if (car.lifestyle.includes(lifestyle)) score += 20;
+      // Body type (max 15 pts)
+      if (bodyType === 'any' || car.type === bodyType) score += 15;
+      // Priority (max 15 pts)
+      if (car.priority.includes(priority)) score += 15;
+      // Seats (max 10 pts)
+      if (car.seats.includes(seats) || (seats >= 7 && car.seats.includes(7)) || (seats <= 4 && car.seats.includes(4))) score += 10;
+      // Fuel (max 10 pts)
+      if (fuel === 'nopreference' || car.fuel.includes(fuel)) score += 10;
+      // Mileage & fuel efficiency bonus
+      if (mileage > 100 && (fuel === 'electric' || car.fuel.includes('electric'))) score += 5;
+      if (mileage > 100 && (car.fuel.includes('hybrid') || car.fuel.includes('diesel'))) score += 3;
+      return { ...car, score };
+    });
+
+    return results.sort((a,b) => b.score - a.score).slice(0,3);
+  }
+
+  function showResults() {
+    const matches = scoreAndSort(answers);
+    const budgetStr = answers.budget >= 500000 ? '$500K+' : '$' + answers.budget.toLocaleString();
+
+    document.getElementById('resultSummary').textContent =
+      `Based on your ${answers.lifestyle || 'executive'} lifestyle, ${budgetStr} budget, and preference for ${answers.priority || 'comfort'} — here are your top 3 matches.`;
+
+    const grid = document.getElementById('resultGrid');
+    grid.innerHTML = '';
+
+    matches.forEach((car, i) => {
+      const pct = Math.round((car.score / 100) * 100);
+      const card = document.createElement('div');
+      card.className = 'result-card reveal' + (i === 0 ? ' top-pick' : '');
+      card.innerHTML = `
+        <div class="result-brand">${car.brand}</div>
+        <div class="result-model">${car.model}</div>
+        <div class="result-desc">${car.desc}</div>
+        <div class="result-specs">
+          <div class="result-spec"><span class="result-spec-label">Starting Price</span><span class="result-spec-val">$${car.price.toLocaleString()}</span></div>
+          <div class="result-spec"><span class="result-spec-label">Power</span><span class="result-spec-val">${car.hp}</span></div>
+          <div class="result-spec"><span class="result-spec-label">0–60 mph</span><span class="result-spec-val">${car.accel}</span></div>
+          <div class="result-spec"><span class="result-spec-label">Fuel / Efficiency</span><span class="result-spec-val">${car.mpg}</span></div>
+          <div class="result-spec"><span class="result-spec-label">Segment</span><span class="result-spec-val">${car.seg}</span></div>
+        </div>
+        <div class="result-score">
+          <span style="font-size:12px; color:var(--muted); letter-spacing:1px; white-space:nowrap;">Match Score</span>
+          <div class="score-bar"><div class="score-fill" style="width:${Math.min(pct,100)}%"></div></div>
+          <div class="score-num">${Math.min(pct,100)}%</div>
+        </div>
+        <button class="result-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Request Consultation</button>
+      `;
+      grid.appendChild(card);
+      setTimeout(() => { card.querySelectorAll('.score-fill').forEach(el => { el.style.width = Math.min(pct,100) + '%'; }); }, 500);
+    });
+
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+
+    // Re-observe new elements
+    document.querySelectorAll('#result-section .reveal').forEach(el => observer.observe(el));
+  }
+
+  function restartQuiz() {
+    currentStep = 1;
+    Object.keys(answers).forEach(k => delete answers[k]);
+    answers.budget = 60000; answers.mileage = 50;
+    budgetRange.value = 60000;
+    document.getElementById('budgetDisplay').textContent = '$60,000';
+    mileageRange.value = 50;
+    document.getElementById('mileageDisplay').textContent = '50 miles/day';
+    document.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+    document.querySelector('.quiz-step[data-step="1"]').classList.add('active');
+    document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('nextBtn').textContent = 'Continue →';
+    document.getElementById('result-section').style.display = 'none';
+    renderProgress();
+    document.getElementById('advisor').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // CONTACT FORM
+  function submitForm(e) {
+    e.preventDefault();
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('formSuccess').style.display = 'block';
+  }
+
+  // COUNTER ANIMATION
+  function animateCounter(el, target, suffix='') {
+    let start = 0, duration = 2000, startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const value = Math.floor(progress * target);
+      el.textContent = value + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  const statsObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const nums = document.querySelectorAll('.stat-num');
+        const vals = [[50,'+'],[12,'K'],[98,'%'],['24/7','']];
+        vals.forEach((v, i) => {
+          if (typeof v[0] === 'number') animateCounter(nums[i], v[0], v[1]);
+        });
+        statsObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+  const statsEl = document.querySelector('.stats-bar');
+  if (statsEl) statsObserver.observe(statsEl);
+</script>
+</body>
+</html>
