@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Statistical Analyzer</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #334155;
+            --text-heading: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --secondary: #f1f5f9;
+            --secondary-hover: #e2e8f0;
+            --error-bg: #fef2f2;
+            --error-text: #b91c1c;
+            --error-border: #f87171;
+            --hot: #ef4444;
+            --cold: #3b82f6;
+            --overdue: #f59e0b;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+            line-height: 1.6;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1, h2, h3 { color: var(--text-heading); margin-top: 0; }
+        h1 { font-size: 2.25rem; margin-bottom: 0.5rem; letter-spacing: -0.025em; }
+        
+        .app-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .panel {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-heading); }
+        
+        select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #fdfdfd;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        textarea { height: 140px; resize: vertical; font-family: monospace; }
+        code { background: var(--secondary); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: #475569;}
+        
+        .error-message {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        button {
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--text-heading);
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+        .btn-secondary:hover { background-color: var(--secondary-hover); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.25rem;
+            border-radius: 10px;
+            border-top: 4px solid;
+            background: var(--surface-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-card.hot { border-top-color: var(--hot); }
+        .stat-card.cold { border-top-color: var(--cold); }
+        .stat-card.overdue { border-top-color: var(--overdue); }
+
+        .number-group { margin-top: 0.75rem; }
+        
+        .ball {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            background: var(--surface-color);
+            border: 1px solid #cbd5e1;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .ball.special { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+        .generator-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;}
+        .ticket-legend { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        
+        .ticket-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        .ticket-row {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .ticket-row:hover { background-color: #f8fafc; }
+        .ticket-row:last-child { border-bottom: none; }
+        .ticket-label { width: 80px; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
+        .ticket-numbers { flex-grow: 1; text-align: right; padding-right: 0.5rem; }
+        
+        .hidden { display: none !important; }
+
+        /* Mobile Layout Adjustments */
+        @media (max-width: 550px) {
+            .ticket-row { flex-direction: column; align-items: center; }
+            .ticket-numbers { text-align: center; padding-right: 0; margin-top: 0.5rem; }
+            .ticket-label { width: auto; margin-bottom: 0.25rem; }
+            .generator-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .ball { width: 30px; height: 30px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>Lottery Statistical Analyzer</h1>
+        <p class="app-subtitle">Analyze past lottery results to identify hot, cold, and overdue numbers and generate statistically inspired ticket combinations.</p>
+    </div>
+
+    <div class="panel">
+        <div id="errorBanner" class="error-message hidden"></div>
+
+        <div class="form-group">
+            <label for="lotteryType">1. Select Game Setup</label>
+            <select id="lotteryType">
+                <option value="mega">Mega Millions (5 from 1-70, 1 from 1-25)</option>
+                <option value="powerball">Powerball (5 from 1-69, 1 from 1-26)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="dataInput">2. Input Historical Data</label>
+            <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                Paste data below. Example formats:<br>
+                <code>12 18 23 44 56 11</code> or <code>12,18,23,44,56,11</code><br>
+                (The parser automatically extracts the last 6 numbers per line, ignoring dates or extra text.)
+            </div>
+            <textarea id="dataInput" placeholder="12 18 23 44 56 11&#10;8 14 22 37 49 7&#10;&#10;or&#10;&#10;12,18,23,44,56,11&#10;8,14,22,37,49,7"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="fileInput">Or upload a CSV/TXT file:</label>
+            <input type="file" id="fileInput" accept=".csv, .txt">
+        </div>
+
+        <button id="analyzeBtn" class="btn-primary">Analyze Data & Generate Combinations</button>
+    </div>
+
+    <div id="resultsPanel" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Statistical Breakdown</h2>
+            <span style="font-size: 0.9rem; font-weight: 600; color: var(--primary);" id="drawCountDisplay"></span>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card hot">
+                <h3 style="color: var(--hot)">Hot Numbers</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -5px;">Top 10 Main & Top 3 Special</p>
+                <div class="number-group" id="hotMain"></div>
+                <div class="number-group" id="hotSpecial"></div>
+            </div>
+            <div class="stat-card cold">
+                <h3 style="color: var(--cold)">Cold Numbers</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -5px;">Top 10 Main & Top 3 Special</p>
+                <div class="number-group" id="coldMain"></div>
+                <div class="number-group" id="coldSpecial"></div>
+            </div>
+            <div class="stat-card overdue">
+                <h3 style="color: var(--overdue)">Overdue Numbers</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -5px;">Top 10 Main & Top 3 Special</p>
+                <div class="number-group" id="overdueMain"></div>
+                <div class="number-group" id="overdueSpecial"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 4rem;">
+            <div class="generator-header">
+                <div>
+                    <h2 style="margin-bottom: 0;">Suggested Ticket Combinations</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
+                        10 valid combinations using a weighted distribution of your Hot, Cold, and Overdue numbers.
+                    </p>
+                </div>
+                <div class="ticket-legend">
+                    Main numbers &nbsp;|&nbsp; <span id="legendSpecialName">Special Ball</span>
+                </div>
+            </div>
+            
+            <ul class="ticket-list" id="ticketList"></ul>
+
+            <button id="regenerateBtn" class="btn-secondary">Regenerate Tickets</button>
+        </div>
+    </div>
+
+    <script>
+        const RULES = {
+            mega: { mainMax: 70, specialMax: 25, name: 'Mega Ball' },
+            powerball: { mainMax: 69, specialMax: 26, name: 'Powerball' }
+        };
+
+        let currentStats = null;
+        let currentRule = null;
+
+        function showError(message) {
+            const banner = document.getElementById('errorBanner');
+            banner.textContent = message;
+            banner.classList.remove('hidden');
+            banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideError() {
+            document.getElementById('errorBanner').classList.add('hidden');
+        }
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => document.getElementById('dataInput').value = e.target.result;
+            reader.readAsText(file);
+        });
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            hideError();
+            const text = document.getElementById('dataInput').value;
+            const type = document.getElementById('lotteryType').value;
+            currentRule = RULES[type];
+            
+            if (!text.trim()) {
+                showError("Please paste historical data or upload a file before analyzing.");
+                return;
+            }
+
+            const draws = parseData(text, currentRule);
+            if (draws.length === 0) {
+                showError("Could not extract any valid draws. Please ensure your data has at least 6 numbers per line and fits the selected game's rules.");
+                return;
+            }
+
+            document.getElementById('drawCountDisplay').textContent = `Analyzed ${draws.length} historical draw`;
+            
+            currentStats = calculateStats(draws, currentRule);
+            renderStats(currentStats);
+            
+            document.getElementById('legendSpecialName').textContent = currentRule.name;
+            generateTickets(currentStats, currentRule);
+            
+            const resultsPanel = document.getElementById('resultsPanel');
+            resultsPanel.classList.remove('hidden');
+            resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        document.getElementById('regenerateBtn').addEventListener('click', () => {
+            if (currentStats && currentRule) {
+                generateTickets(currentStats, currentRule);
+            }
+        });
+
+        function parseData(text, rule) {
+            const draws = [];
+            const lines = text.split('\n');
+            
+            lines.forEach((line) => {
+                const nums = line.match(/\d+/g);
+                if (nums && nums.length >= 6) {
+                    const lastSix = nums.slice(-6).map(Number);
+                    
+                    const mainValid = lastSix.slice(0, 5).every(n => n >= 1 && n <= rule.mainMax);
+                    const specialValid = lastSix[5] >= 1 && lastSix[5] <= rule.specialMax;
+
+                    if (mainValid && specialValid) {
+                        draws.push({
+                            main: lastSix.slice(0, 5),
+                            special: lastSix[5]
+                        });
+                    }
+                }
+            });
+            return draws;
+        }
+
+        function calculateStats(draws, rule) {
+            const initStats = (max) => {
+                const freqs = {}, lastSeen = {};
+                for (let i = 1; i <= max; i++) {
+                    freqs[i] = 0;
+                    lastSeen[i] = 999999; 
+                }
+                return { freqs, lastSeen };
+            };
+
+            const mainStats = initStats(rule.mainMax);
+            const specStats = initStats(rule.specialMax);
+
+            draws.forEach((draw, index) => {
+                draw.main.forEach(num => {
+                    mainStats.freqs[num]++;
+                    if (mainStats.lastSeen[num] === 999999) mainStats.lastSeen[num] = index;
+                });
+                
+                specStats.freqs[draw.special]++;
+                if (specStats.lastSeen[draw.special] === 999999) specStats.lastSeen[draw.special] = index;
+            });
+
+            const getTop = (max, sortFn, count) => 
+                Array.from({length: max}, (_, i) => i + 1).sort(sortFn).slice(0, count);
+
+            return {
+                main: {
+                    hot: getTop(rule.mainMax, (a, b) => mainStats.freqs[b] - mainStats.freqs[a], 10),
+                    cold: getTop(rule.mainMax, (a, b) => mainStats.freqs[a] - mainStats.freqs[b], 10),
+                    overdue: getTop(rule.mainMax, (a, b) => mainStats.lastSeen[b] - mainStats.lastSeen[a], 10)
+                },
+                special: {
+                    hot: getTop(rule.specialMax, (a, b) => specStats.freqs[b] - specStats.freqs[a], 3),
+                    cold: getTop(rule.specialMax, (a, b) => specStats.freqs[a] - specStats.freqs[b], 3),
+                    overdue: getTop(rule.specialMax, (a, b) => specStats.lastSeen[b] - specStats.lastSeen[a], 3)
+                }
+            };
+        }
+
+        function renderStats(stats) {
+            const makeBalls = (arr, isSpec = false) => 
+                arr.map(n => `<span class="ball ${isSpec ? 'special' : ''}">${n}</span>`).join('');
+            
+            document.getElementById('hotMain').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Main</span> ' + makeBalls(stats.main.hot);
+            document.getElementById('hotSpecial').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Spec</span> ' + makeBalls(stats.special.hot, true);
+            
+            document.getElementById('coldMain').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Main</span> ' + makeBalls(stats.main.cold);
+            document.getElementById('coldSpecial').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Spec</span> ' + makeBalls(stats.special.cold, true);
+            
+            document.getElementById('overdueMain').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Main</span> ' + makeBalls(stats.main.overdue);
+            document.getElementById('overdueSpecial').innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem; width: 40px; display:inline-block;">Spec</span> ' + makeBalls(stats.special.overdue, true);
+        }
+
+        function generateTickets(stats, rule) {
+            const list = document.getElementById('ticketList');
+            
+            // UI Polish: Fade out and back in to show it regenerated
+            list.style.opacity = '0.3';
+            setTimeout(() => { list.style.opacity = '1'; }, 150);
+            
+            list.innerHTML = '';
+
+            // Ensure our extraction pools are 100% deduplicated
+            const mainPool = Array.from(new Set([...stats.main.hot, ...stats.main.cold, ...stats.main.overdue]));
+            const specPool = Array.from(new Set([...stats.special.hot, ...stats.special.cold, ...stats.special.overdue]));
+
+            const usedSpecials = new Set();
+
+            for (let i = 0; i < 10; i++) {
+                const ticketMain = new Set(); 
+                
+                // Draw 3 unique numbers from the deduplicated stats pool
+                const statsToDraw = Math.min(3, mainPool.length);
+                while (ticketMain.size < statsToDraw) {
+                    ticketMain.add(mainPool[Math.floor(Math.random() * mainPool.length)]);
+                }
+
+                // Fill the rest up to 5 with valid randoms
+                while (ticketMain.size < 5) {
+                    ticketMain.add(Math.floor(Math.random() * rule.mainMax) + 1);
+                }
+
+                const sortedMain = [...ticketMain].sort((a, b) => a - b);
+                
+                let specialBall;
+                let safetyCounter = 0;
+                
+                // Force special ball variance across tickets
+                do {
+                    if (Math.random() < 0.7 && specPool.length > 0) {
+                        specialBall = specPool[Math.floor(Math.random() * specPool.length)];
+                    } else {
+                        specialBall = Math.floor(Math.random() * rule.specialMax) + 1;
+                    }
+                    safetyCounter++;
+                } while (usedSpecials.has(specialBall) && usedSpecials.size < rule.specialMax && safetyCounter < 20);
+
+                usedSpecials.add(specialBall);
+
+                const row = document.createElement('li');
+                row.className = 'ticket-row';
+                row.innerHTML = `
+                    <span class="ticket-label">Set ${i + 1}</span>
+                    <div class="ticket-numbers">
+                        ${sortedMain.map(n => `<span class="ball">${n}</span>`).join('')}
+                        <span style="margin: 0 15px; color: var(--border-color); font-weight: bold;">|</span>
+                        <span class="ball special" title="${rule.name}">${specialBall}</span>
+                    </div>
+                `;
+                list.appendChild(row);
+            }
+        }
+    </script>
+</body>
+</html>
